@@ -19,7 +19,7 @@ ocr_out_free/
 # OS
 .DS_Store
 
-# stray local test artifacts
-page_*.md
-page_*_boxed.png
-test_invoice.png
+# stray local test artifacts (root only — keep curated examples/)
+/page_*.md
+/page_*_boxed.png
+/test_invoice.png
