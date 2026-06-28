@@ -46,16 +46,19 @@ Full transcripts: [`examples/page_01_grounding.md`](examples/page_01_grounding.m
 
 ### Figure extraction
 
-When the model tags a region as `image`/`figure`, those regions are cropped out of
-the page as standalone files. On the experiments page it localized the RMSE plots:
+Figures are cropped out of the page as standalone files. The model directly tags
+some regions `image`; for plain-background plots it tends to under-detect, so a
+**caption-anchored fallback** reconstructs the figure as the band above each
+`FIG. N` caption. On the experiments page this recovers all three plots
+(top figure recovered via its caption; bottom two model-detected):
 
-| Page (figures boxed) | Extracted crops |
+| Page (regions boxed) | Extracted crops |
 |---|---|
-| ![page 8 boxed](examples/page_08_boxed.png) | ![fig a](examples/extracted_figures/page08_fig_00.png) ![fig b](examples/extracted_figures/page08_fig_01.png) |
+| ![page 8 boxed](examples/page_08_boxed.png) | ![fig 7.1](examples/extracted_figures/page08_fig_02.png)<br>![fig 7.2a](examples/extracted_figures/page08_fig_00.png) ![fig 7.2b](examples/extracted_figures/page08_fig_01.png) |
 
 ```bash
 python ocr.py --image page_08.png --out-image page_08_boxed.png \
-              --extract-figures figures/      # crops every image/figure region to figures/
+              --extract-figures figures/      # crops every figure (model + caption-anchored) to figures/
 ```
 
 ## What this is

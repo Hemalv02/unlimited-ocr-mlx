@@ -255,6 +255,74 @@ def draw_boxes(image, refs):
     return img
 
 
+def parse_layout(text):
+    """Parse regions WITH their following text: [(label, [x1,y1,x2,y2], text), ...]."""
+    out = []
+    pat = (r"<\|det\|>\s*([A-Za-z_][\w-]*)\s*\[([^\]]+)\]\s*<\|/det\|>"
+           r"(.*?)(?=<\|det\|>|<\|ref\|>|$)")
+    for label, box, body in re.findall(pat, text, re.DOTALL):
+        try:
+            coords = [int(float(x)) for x in box.split(",")]
+            if len(coords) == 4:
+                out.append((label.strip().lower(), coords, body.strip()))
+        except Exception:
+            continue
+    return out
+
+
+_FIG_CAP = re.compile(r"^\s*(fig(?:ure)?\.?|table)\s*\.?\s*\d", re.I)
+
+
+def extract_figures_smart(image, text, out_dir, prefix="fig", top_margin=0.04):
+    """Robust figure extraction: model `image` boxes + caption-anchored fallback.
+
+    For every figure/table caption the model finds, if no `image` box sits directly
+    above it, the figure is reconstructed as the page-width band between the region
+    above and the caption — recovering plain-background plots the model under-detects.
+    """
+    import os
+    os.makedirs(out_dir, exist_ok=True)
+    W, H = image.size
+    regions = parse_layout(text)
+    img_boxes = [c for l, c, _ in regions if l in ("image", "figure")]
+    captions = [c for l, c, t in regions
+                if l in ("image_caption", "table_caption") or _FIG_CAP.match(t)]
+    # content width from all detected regions (fallback to full page)
+    xs1 = [c[0] for _, c, _ in regions] or [20]
+    xs2 = [c[2] for _, c, _ in regions] or [979]
+    cx1, cx2 = min(xs1), max(xs2)
+
+    boxes = list(img_boxes)
+    for cap in sorted(captions, key=lambda c: c[1]):  # top to bottom
+        cap_top = cap[1]
+        # already an image directly above this caption? then skip
+        if any(b[3] <= cap_top + 10 and b[3] >= cap_top - 320 for b in img_boxes):
+            continue
+        # nearest region bottom above the caption (else a top margin)
+        aboves = [c[3] for _, c, _ in regions if c[3] < cap_top - 10]
+        top = max(aboves) + 5 if aboves else int(top_margin * 999)
+        if cap_top - top < 40:          # too thin to be a figure
+            continue
+        boxes.append([cx1, top, cx2, cap_top - 3])
+
+    # dedupe near-identical boxes, then crop
+    saved, seen = [], []
+    i = 0
+    for x1, y1, x2, y2 in boxes:
+        key = (round(x1, -1), round(y1, -1), round(x2, -1), round(y2, -1))
+        if key in seen:
+            continue
+        seen.append(key)
+        px1, py1 = int(x1 / 999 * W), int(y1 / 999 * H)
+        px2, py2 = int(x2 / 999 * W), int(y2 / 999 * H)
+        if px2 <= px1 or py2 <= py1:
+            continue
+        p = os.path.join(out_dir, f"{prefix}_{i:02d}.png")
+        image.convert("RGB").crop((px1, py1, px2, py2)).save(p)
+        saved.append(p); i += 1
+    return saved
+
+
 def extract_images(image, refs, out_dir, prefix="fig", labels=("image", "figure")):
     """Crop every region the model tagged as a figure/image and save each as a file.
     Returns the list of saved paths. Coords are 0-999 normalized (same as draw_boxes)."""

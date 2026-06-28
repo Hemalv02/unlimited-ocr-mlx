@@ -147,7 +147,8 @@ def main():
 
     if args.extract_figures:
         import udriver
-        saved = udriver.extract_images(Image.open(args.image), refs, args.extract_figures)
+        # caption-anchored: recovers plain-background figures the model under-detects
+        saved = udriver.extract_figures_smart(Image.open(args.image), text, args.extract_figures)
         print(f"[extracted {len(saved)} figure(s) -> {args.extract_figures}/]")
 
 
