@@ -1,0 +1,25 @@
+# Converted MLX models + source weights (host on Hugging Face, not GitHub)
+mlx_unlimited_bf16/
+mlx_unlimited_4bit/
+hf_model/
+*.safetensors
+
+# Upstream clone + venv
+mlx-vlm/
+.venv/
+__pycache__/
+*.pyc
+
+# Rendered pages / OCR outputs / inputs (kept out except curated examples/)
+pdf_pages/
+ocr_out/
+ocr_out_free/
+*.pdf
+
+# OS
+.DS_Store
+
+# stray local test artifacts
+page_*.md
+page_*_boxed.png
+test_invoice.png
