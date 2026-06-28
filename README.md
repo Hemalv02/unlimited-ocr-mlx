@@ -3,6 +3,47 @@
 An Apple-Silicon (MLX) port of [`baidu/Unlimited-OCR`](https://huggingface.co/baidu/Unlimited-OCR),
 a 3B vision-language OCR model for one-shot long-horizon document parsing.
 
+## Demo
+
+Run on a real arXiv paper (*Spectral diagonal ensemble Kalman filters*, 2014) — the
+model recovers layout, prose, math, author diacritics, citations, and footnotes.
+
+### Layout grounding (`<|grounding|>Convert the document to markdown.`)
+
+Every region is detected and labelled (`title`, `text`, `equation`, `aside_text`,
+`page_footnote`, `page_number`):
+
+| Title page | Dense math page |
+|---|---|
+| ![page 1 layout](examples/page_01_boxed.png) | ![page 4 equations](examples/page_04_boxed.png) |
+
+### LaTeX output
+
+Equations come back as real LaTeX (excerpt from the page above):
+
+```latex
+\[
+\mathbf{F} = \left[ \boldsymbol{u}_{1}, \dots, \boldsymbol{u}_{n} \right]^{*}, \quad
+\mathbf{C u}_{i} = \lambda_{i}\boldsymbol{u}_{i}, \quad \mathbf{F F}^{*} = \mathbf{I}. \tag{5.1}
+\]
+
+THEOREM 5.1 (Error of the spectral diagonal approximation). Let \( \mathbf{X}^k \sim
+N(\bar{\mathbf{X}}, \mathbf{C}) \), \( k = 1, \ldots, N \), be independent ...
+
+\[
+\mathrm{E}\left[ \|\mathbf{C} - \mathbf{D}^{N}\|_{\mathrm{F}}^{2} \right]
+= \frac{2}{N-1} \sum_{i=1}^{n} \lambda_{i}^{2}. \tag{5.3}
+\]
+```
+
+And prose with diacritics / citations is verbatim:
+
+> SPECTRAL DIAGONAL ENSEMBLE KALMAN FILTERS — IVAN KASANICKÝ\*, JAN MANDEL\*†, AND MARTIN VEJMELKA\*
+> … converges to the KF in the large ensemble limit (Kwiatkowski and Mandel, 2014; Le Gland et al., 2011) …
+
+Full transcripts: [`examples/page_01_grounding.md`](examples/page_01_grounding.md) ·
+[`examples/page_01_freeocr.md`](examples/page_01_freeocr.md)
+
 ## What this is
 
 Unlimited-OCR is, by the authors' own description, **DeepSeek-OCR "pushed one step
