@@ -44,6 +44,20 @@ And prose with diacritics / citations is verbatim:
 Full transcripts: [`examples/page_01_grounding.md`](examples/page_01_grounding.md) ·
 [`examples/page_01_freeocr.md`](examples/page_01_freeocr.md)
 
+### Figure extraction
+
+When the model tags a region as `image`/`figure`, those regions are cropped out of
+the page as standalone files. On the experiments page it localized the RMSE plots:
+
+| Page (figures boxed) | Extracted crops |
+|---|---|
+| ![page 8 boxed](examples/page_08_boxed.png) | ![fig a](examples/extracted_figures/page08_fig_00.png) ![fig b](examples/extracted_figures/page08_fig_01.png) |
+
+```bash
+python ocr.py --image page_08.png --out-image page_08_boxed.png \
+              --extract-figures figures/      # crops every image/figure region to figures/
+```
+
 ## What this is
 
 Unlimited-OCR is, by the authors' own description, **DeepSeek-OCR "pushed one step

@@ -119,6 +119,8 @@ def main():
     ap.add_argument("--max-tokens", type=int, default=8192)
     ap.add_argument("--out-md", default=None)
     ap.add_argument("--out-image", default=None)
+    ap.add_argument("--extract-figures", default=None,
+                    help="dir to crop+save detected image/figure regions into")
     args = ap.parse_args()
 
     model, processor = load(args.model)
@@ -142,6 +144,11 @@ def main():
         annotated = draw_boxes(Image.open(args.image), refs)
         annotated.save(args.out_image)
         print(f"[saved {len(refs)} boxes -> {args.out_image}]")
+
+    if args.extract_figures:
+        import udriver
+        saved = udriver.extract_images(Image.open(args.image), refs, args.extract_figures)
+        print(f"[extracted {len(saved)} figure(s) -> {args.extract_figures}/]")
 
 
 if __name__ == "__main__":

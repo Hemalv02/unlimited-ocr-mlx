@@ -255,6 +255,34 @@ def draw_boxes(image, refs):
     return img
 
 
+def extract_images(image, refs, out_dir, prefix="fig", labels=("image", "figure")):
+    """Crop every region the model tagged as a figure/image and save each as a file.
+    Returns the list of saved paths. Coords are 0-999 normalized (same as draw_boxes)."""
+    import os
+    os.makedirs(out_dir, exist_ok=True)
+    W, H = image.size
+    saved = []
+    i = 0
+    for label, box in refs:
+        if label.lower() not in labels:
+            continue
+        try:
+            coords = eval(box)
+        except Exception:
+            continue
+        if coords and isinstance(coords[0], (int, float)):
+            coords = [coords]
+        for x1, y1, x2, y2 in coords:
+            x1 = int(x1 / 999 * W); y1 = int(y1 / 999 * H)
+            x2 = int(x2 / 999 * W); y2 = int(y2 / 999 * H)
+            if x2 <= x1 or y2 <= y1:
+                continue
+            p = os.path.join(out_dir, f"{prefix}_{i:02d}.png")
+            image.convert("RGB").crop((x1, y1, x2, y2)).save(p)
+            saved.append(p); i += 1
+    return saved
+
+
 def to_markdown(text):
     clean = re.sub(r"<\|/?(ref|det|grounding)\|>", "", text)
     clean = re.sub(r"[A-Za-z_]+\s*\[\d+,\s*\d+,\s*\d+,\s*\d+\]", "", clean)
